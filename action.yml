@@ -1,18 +1,54 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'E-action'
+description: ''
+author: ''
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  emcee_token:
+    description: 'Token for emcee.cloud API'
     required: true
-    default: '1000'
+  app_path:
+    description: 'URL or PATH to App. Multiple values can be specified, separated by a comma.'
+    required: false
+    default: ''
+  tests_path:
+    description: 'URL or PATH to Tests. Multiple values can be specified, separated by a comma.'
+    required: false
+    default: ''
+  runner_path:
+    description: 'URL or PATH to Runner. Multiple values can be specified, separated by a comma.'
+    required: false
+    default: ''
+  test_plan_path:
+    description: 'URL or PATH to TestPlan file.'
+    required: false
+    default: ''
+  platform:
+    description: 'ios/android'
+    required: true
+  device_os_version:
+    description: 'On which os version run tests'
+    required: true
+  envs:
+    description: 'Comma separated envs ex."ENV1=value1,ENV2=value2"'
+    required: false
+  wait_for_end:
+    description: 'Blocking your flow and waiting for the tests to complete'
+    required: false
+    default: 'true'
+  download_reports:
+    description: 'Comma separated list of reports to be downloaded upon completion. ex:"allure,junit" Works only with wait_for_end:true'
+    required: false
+    default: ''
 
 # Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  run_id:
+    description: 'Emcee run id'
+  run_url:
+    description: 'Emcee run url'
+  reports_path:
+    description: 'Path to downloaded reports'
 
 runs:
   using: node20

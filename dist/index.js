@@ -2722,6 +2722,202 @@ exports["default"] = _default;
 
 /***/ }),
 
+/***/ 761:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.prepareArtifacts = void 0;
+const utils_1 = __nccwpck_require__(314);
+const emcee_client_1 = __nccwpck_require__(125);
+const core = __importStar(__nccwpck_require__(186));
+const prepareArtifacts = async (artifacts, artifactType) => {
+    const testArtifacts = [];
+    for (const a of artifacts) {
+        if (a === '')
+            continue;
+        let url = a;
+        if (!(0, utils_1.isURL)(a)) {
+            core.debug(`Local artifact found ${a}`);
+            core.debug(`Uploading artifact ${a} to emcee.cloud`);
+            url = await (0, emcee_client_1.uploadFile)(a);
+            core.debug(`Artifact ${a} uploaded`);
+        }
+        testArtifacts.push({
+            type: artifactType,
+            data: url
+        });
+    }
+    return testArtifacts;
+};
+exports.prepareArtifacts = prepareArtifacts;
+
+
+/***/ }),
+
+/***/ 125:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.uploadFile = exports.downloadReports = exports.getJobData = exports.startRun = exports.createRun = exports.makeGetRequest = exports.makeServerRequest = void 0;
+const fs = __importStar(__nccwpck_require__(147));
+const stream = __importStar(__nccwpck_require__(781));
+const utils_1 = __nccwpck_require__(314);
+const core = __importStar(__nccwpck_require__(186));
+const path = __importStar(__nccwpck_require__(17));
+const promises_1 = __nccwpck_require__(670);
+const EMCEE_CLOUD_API = 'https://emcee.cloud/api/v1';
+const EMCEE_TOKEN = core.getInput('emcee_token');
+const makeServerRequest = async (apiPath, data) => {
+    const response = await fetch(`${EMCEE_CLOUD_API}${apiPath}`, data);
+    if (!response.ok) {
+        throw new Error(response.statusText);
+    }
+    return response;
+};
+exports.makeServerRequest = makeServerRequest;
+const makePostRequest = async (apiPath, payload) => {
+    const requestData = {
+        method: 'POST',
+        headers: {
+            cookie: `emcee_token=${EMCEE_TOKEN};`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    };
+    return await (0, exports.makeServerRequest)(apiPath, requestData);
+};
+const makeGetRequest = async (apiPath) => {
+    const requestData = {
+        method: 'GET',
+        headers: {
+            cookie: `emcee_token=${EMCEE_TOKEN};`
+        }
+    };
+    return await (0, exports.makeServerRequest)(apiPath, requestData);
+};
+exports.makeGetRequest = makeGetRequest;
+const createRun = async (payload) => {
+    const data = (await (await makePostRequest('/run/create', payload)).json());
+    return data.runId;
+};
+exports.createRun = createRun;
+const startRun = async (runId) => {
+    const data = (await (await makePostRequest('/run/startJob', { runId })).json());
+    return data.jobIds;
+};
+exports.startRun = startRun;
+const getJobData = async (jobId) => {
+    const data = (await (await makePostRequest('/job/details', { jobId })).json());
+    return data.testJob;
+};
+exports.getJobData = getJobData;
+const downloadReports = async (runId, reports, timeout = 5000) => {
+    const dirName = 'emcee_artifacts';
+    if (!fs.existsSync(dirName))
+        await fs.promises.mkdir(dirName);
+    const reportToDownload = [...reports];
+    while (reportToDownload.length !== 0) {
+        await (0, promises_1.setTimeout)(timeout);
+        const report = reportToDownload.shift();
+        const res = await (0, exports.makeGetRequest)(`/report/getReport/${runId}/${report}`);
+        let jsonBody = {};
+        if (res.headers.get('content-type') === 'application/json') {
+            jsonBody = await res.json();
+        }
+        if ('error' in jsonBody) {
+            const { error } = jsonBody;
+            if (error.includes('not ready')) {
+                core.debug(error);
+                reportToDownload.push(report);
+            }
+            else {
+                core.error(error);
+            }
+            continue;
+        }
+        const filename = res.headers
+            .get('content-disposition')
+            ?.split(';')
+            ?.pop()
+            ?.split('=')
+            ?.pop();
+        const destination = path.resolve(`./${dirName}`, filename ?? report);
+        const fileStream = fs.createWriteStream(destination, { flags: 'wx' });
+        await stream.promises.finished(stream.Readable.fromWeb(res.body).pipe(fileStream));
+        core.info(`${report} downloaded`);
+    }
+    return path.resolve(`./${dirName}`);
+};
+exports.downloadReports = downloadReports;
+const uploadFile = async (filePath) => {
+    const file = await fs.openAsBlob(filePath);
+    const formData = new FormData();
+    formData.append('file', file, (0, utils_1.pathToFileName)(filePath));
+    const requestData = {
+        method: 'POST',
+        headers: {
+            cookie: `emcee_token=${EMCEE_TOKEN};`
+        },
+        body: formData
+    };
+    const data = (await (await (0, exports.makeServerRequest)('/file/upload', requestData)).json());
+    return `${data.url}#${(0, utils_1.pathToFileName)(filePath)}`;
+};
+exports.uploadFile = uploadFile;
+
+
+/***/ }),
+
 /***/ 399:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -2753,22 +2949,48 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(186));
-const wait_1 = __nccwpck_require__(259);
+const params_1 = __nccwpck_require__(873);
+const artifacts_1 = __nccwpck_require__(761);
+const types_1 = __nccwpck_require__(77);
+const emcee_client_1 = __nccwpck_require__(125);
+const waiter_1 = __nccwpck_require__(834);
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
 async function run() {
     try {
-        const ms = core.getInput('milliseconds');
-        // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-        core.debug(`Waiting ${ms} milliseconds ...`);
-        // Log the current timestamp, wait, then log the new timestamp
-        core.debug(new Date().toTimeString());
-        await (0, wait_1.wait)(parseInt(ms, 10));
-        core.debug(new Date().toTimeString());
-        // Set outputs for other workflow steps to use
-        core.setOutput('time', new Date().toTimeString());
+        core.info('Parsing input params');
+        const params = (0, params_1.parseParams)();
+        core.info('Preparing artifacts');
+        const isIosRun = params.platform === types_1.Platform.ios;
+        const apps = await (0, artifacts_1.prepareArtifacts)(params.apps, types_1.ArtifactType.appArchive);
+        const tests = await (0, artifacts_1.prepareArtifacts)(params.tests, types_1.ArtifactType.testsArchive);
+        const runners = await (0, artifacts_1.prepareArtifacts)(params.runners, isIosRun ? types_1.ArtifactType.runnerArchive : types_1.ArtifactType.runnerClass);
+        const plans = isIosRun && params.plan != null
+            ? await (0, artifacts_1.prepareArtifacts)([params.plan], types_1.ArtifactType.xcTestRun)
+            : [];
+        core.info('Creating emcee.cloud Test Run');
+        const runId = await (0, emcee_client_1.createRun)({
+            platform: params.platform,
+            artifacts: apps.concat(tests).concat(runners).concat(plans),
+            deviceOsVersion: params.deviceOs,
+            environment: params.envs
+        });
+        core.info(`Starting emcee.cloud Test Run. id: ${runId}`);
+        const jobs = await (0, emcee_client_1.startRun)(runId);
+        if (params.waitForEnd) {
+            core.info(`Waiting for the run to complete. id: ${runId}`);
+            await (0, waiter_1.waitForRunEnd)(jobs);
+            if (params.downloadReports.length !== 0) {
+                core.info('Downloading reports');
+                const reportsPath = await (0, emcee_client_1.downloadReports)(runId, params.downloadReports);
+                core.setOutput('reports_path', reportsPath);
+            }
+        }
+        core.setOutput('run_id', runId);
+        core.setOutput('run_url', `https://emcee.cloud/run/${runId}`);
+        core.info('Action completed');
     }
     catch (error) {
         // Fail the workflow run if an error occurs
@@ -2781,27 +3003,201 @@ exports.run = run;
 
 /***/ }),
 
-/***/ 259:
+/***/ 873:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parseParams = exports.toMap = exports.toArray = void 0;
+const types_1 = __nccwpck_require__(77);
+const core = __importStar(__nccwpck_require__(186));
+const toArray = (str) => str.split(',').map(i => i.trim());
+exports.toArray = toArray;
+const toMap = (str) => {
+    const envs = (0, exports.toArray)(str);
+    const map = new Map();
+    for (const env of envs) {
+        const data = env.split('=');
+        map.set(data[0], data[1]);
+    }
+    return map;
+};
+exports.toMap = toMap;
+const parseParams = () => {
+    const params = {
+        apps: (0, exports.toArray)(core.getInput('app_path')),
+        tests: (0, exports.toArray)(core.getInput('tests_path')),
+        runners: (0, exports.toArray)(core.getInput('runner_path')),
+        plan: core.getInput('test_plan_path'),
+        platform: core.getInput('platform'),
+        deviceOs: core.getInput('device_os_version'),
+        envs: (0, exports.toMap)(core.getInput('device_os_version')),
+        waitForEnd: core.getBooleanInput('wait_for_end'),
+        downloadReports: (0, exports.toArray)(core.getInput('download_reports'))
+    };
+    if (params.platform === types_1.Platform.android) {
+        params.deviceOs = Number(params.deviceOs);
+    }
+    return params;
+};
+exports.parseParams = parseParams;
+
+
+/***/ }),
+
+/***/ 77:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.wait = void 0;
-/**
- * Wait for a number of milliseconds.
- * @param milliseconds The number of milliseconds to wait.
- * @returns {Promise<string>} Resolves with 'done!' after the wait is over.
- */
-async function wait(milliseconds) {
-    return new Promise(resolve => {
-        if (isNaN(milliseconds)) {
-            throw new Error('milliseconds not a number');
+exports.TestJobStatus = exports.Platform = exports.ArtifactType = void 0;
+var ArtifactType;
+(function (ArtifactType) {
+    ArtifactType["appArchive"] = "appArchive";
+    ArtifactType["testsArchive"] = "testsArchive";
+    ArtifactType["runnerArchive"] = "runnerArchive";
+    ArtifactType["runnerClass"] = "runnerClass";
+    ArtifactType["packageName"] = "packageName";
+    ArtifactType["xcTestRun"] = "xcTestRun";
+})(ArtifactType || (exports.ArtifactType = ArtifactType = {}));
+var Platform;
+(function (Platform) {
+    Platform["ios"] = "ios";
+    Platform["android"] = "android";
+})(Platform || (exports.Platform = Platform = {}));
+var TestJobStatus;
+(function (TestJobStatus) {
+    TestJobStatus["created"] = "created";
+    TestJobStatus["inProgress"] = "inProgress";
+    TestJobStatus["finished"] = "finished";
+    TestJobStatus["failed"] = "failed";
+    TestJobStatus["deleted"] = "deleted";
+})(TestJobStatus || (exports.TestJobStatus = TestJobStatus = {}));
+
+
+/***/ }),
+
+/***/ 314:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.pathToFileName = exports.isURL = void 0;
+const isURL = (str) => {
+    try {
+        // eslint-disable-next-line no-new
+        new URL(str);
+        return true;
+    }
+    catch {
+        return false;
+    }
+};
+exports.isURL = isURL;
+const pathToFileName = (path) => {
+    if (path.includes('#'))
+        return path.split('#').pop();
+    return path.split('/').pop();
+};
+exports.pathToFileName = pathToFileName;
+
+
+/***/ }),
+
+/***/ 834:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.waitForRunEnd = void 0;
+const core = __importStar(__nccwpck_require__(186));
+const emcee_client_1 = __nccwpck_require__(125);
+const types_1 = __nccwpck_require__(77);
+const promises_1 = __nccwpck_require__(670);
+const waitForRunEnd = async (jobs, timeout = 10000) => {
+    if (jobs.length === 0) {
+        return;
+    }
+    let errors = 0;
+    let finished = false;
+    core.debug('Waiter started');
+    do {
+        core.debug(`Waiter errors: ${errors}`);
+        core.debug(`Waiter finished: ${finished}`);
+        try {
+            const statuses = [];
+            for (const job of jobs) {
+                const jobData = await (0, emcee_client_1.getJobData)(job);
+                errors = 0;
+                statuses.push(jobData.status);
+                if (statuses.length === jobs.length &&
+                    statuses.every(s => s !== types_1.TestJobStatus.inProgress)) {
+                    finished = true;
+                }
+            }
         }
-        setTimeout(() => resolve('done!'), milliseconds);
-    });
-}
-exports.wait = wait;
+        catch (e) {
+            errors++;
+            if (errors >= 5) {
+                throw e;
+            }
+            core.debug(`Waiter error: ${e}`);
+        }
+        core.debug(`Waiter: sleep ${timeout / 1000}s`);
+        await (0, promises_1.setTimeout)(timeout);
+    } while (!finished);
+};
+exports.waitForRunEnd = waitForRunEnd;
 
 
 /***/ }),
@@ -2875,6 +3271,22 @@ module.exports = require("os");
 
 "use strict";
 module.exports = require("path");
+
+/***/ }),
+
+/***/ 781:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("stream");
+
+/***/ }),
+
+/***/ 670:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("timers/promises");
 
 /***/ }),
 

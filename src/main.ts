@@ -1,5 +1,9 @@
 import * as core from '@actions/core'
-import { wait } from './wait'
+import { parseParams } from './params'
+import { prepareArtifacts } from './artifacts'
+import { ArtifactType, Platform } from './types'
+import { createRun, downloadReports, startRun } from './emcee-client'
+import { waitForRunEnd } from './waiter'
 
 /**
  * The main function for the action.
@@ -7,18 +11,49 @@ import { wait } from './wait'
  */
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    core.info('Parsing input params')
+    const params = parseParams()
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    core.info('Preparing artifacts')
+    const isIosRun = params.platform === Platform.ios
+    const apps = await prepareArtifacts(params.apps, ArtifactType.appArchive)
+    const tests = await prepareArtifacts(
+      params.tests,
+      ArtifactType.testsArchive
+    )
+    const runners = await prepareArtifacts(
+      params.runners,
+      isIosRun ? ArtifactType.runnerArchive : ArtifactType.runnerClass
+    )
+    const plans =
+      isIosRun && params.plan != null
+        ? await prepareArtifacts([params.plan], ArtifactType.xcTestRun)
+        : []
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    core.info('Creating emcee.cloud Test Run')
+    const runId = await createRun({
+      platform: params.platform,
+      artifacts: apps.concat(tests).concat(runners).concat(plans),
+      deviceOsVersion: params.deviceOs,
+      environment: params.envs
+    })
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    core.info(`Starting emcee.cloud Test Run. id: ${runId}`)
+    const jobs = await startRun(runId)
+
+    if (params.waitForEnd) {
+      core.info(`Waiting for the run to complete. id: ${runId}`)
+      await waitForRunEnd(jobs)
+      if (params.downloadReports.length !== 0) {
+        core.info('Downloading reports')
+        const reportsPath = await downloadReports(runId, params.downloadReports)
+        core.setOutput('reports_path', reportsPath)
+      }
+    }
+
+    core.setOutput('run_id', runId)
+    core.setOutput('run_url', `https://emcee.cloud/run/${runId}`)
+    core.info('Action completed')
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
