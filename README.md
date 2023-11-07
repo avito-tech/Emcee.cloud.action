@@ -95,7 +95,7 @@ The directory into which reports were saved
 ## Example usage
 
 ```yaml
-        uses: ./
+        uses: avito-tech/Emcee.cloud.action@v0.0.1b
         with:
           emcee_token: ${{ secrets.EMCEE_TOKEN }}
           app_path: http://emcee.cloud/api/v1/file/download/123#app-debug.apk
