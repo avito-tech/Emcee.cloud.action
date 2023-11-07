@@ -4,17 +4,17 @@
 [![GitHub Super-Linter](https://github.com/JasperJhons/e-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![coverage](badges/coverage.svg)
 
-This action implements basic API calls for [emcee.cloud](https://emcee.cloud/)
+This action implements basic API calls for [emcee.cloud](https://emcee.cloud/).
 
-Full documentation available [here](https://emcee.cloud/docs/)
+Full documentation available [here](https://emcee.cloud/docs/).
 
 With this action you can do the following:
 
-- Upload your test artifacts to [emcee.cloud](https://emcee.cloud/) (*optional*)
-- Create new Test Run
-- Wait until the end of Test Run (*optional*)
+- Upload your test artifacts to [emcee.cloud](https://emcee.cloud/) (*optional*).
+- Create new Test Run.
+- Wait until the end of Test Run (*optional*).
 - Download Test report artifacts on Test Run completion
-(*requires waiting until the end*)
+(*requires waiting until the end*).
 
 ## Inputs
 
