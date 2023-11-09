@@ -1,6 +1,6 @@
-name: 'E-action'
-description: ''
-author: ''
+name: 'Emcee.cloud action'
+description: 'This action implements basic API calls for emcee.cloud.'
+author: 'Avito'
 
 # Define your inputs here.
 inputs:
@@ -53,3 +53,7 @@ outputs:
 runs:
   using: node20
   main: dist/index.js
+
+branding:
+  icon: 'activity'
+  color: 'purple'
