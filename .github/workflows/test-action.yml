@@ -1,0 +1,30 @@
+name: Test action
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  test-action:
+    runs-on: ubuntu-latest
+    name: test-action
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests
+        id: emcee
+        uses: ./
+        with:
+          emcee_token: ${{ secrets.EMCEE_TOKEN }}
+          app_path: https://emcee.cloud/api/v1/file/download/0786d961-93cb-4dc7-a9d5-443bd8922788#cloud_sample-debug.apk
+          tests_app_path: https://emcee.cloud/api/v1/file/download/944a149a-b197-45b6-9f08-bd60afcfa94e#cloud_sample-debug-androidTest.apk
+          platform: android
+          device_os_version: 27
+          reports: allure
+      - name: Check outputs
+        run: echo "Reports ${{ steps.emcee.outputs.reports_path }}"
