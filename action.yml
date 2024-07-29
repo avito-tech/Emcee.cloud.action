@@ -1,58 +1,67 @@
 name: 'Emcee.cloud action'
-description: 'This action implements basic API calls for emcee.cloud.'
+description: 'This action encapsulates Command-Line interface for Emcee.cloud'
 author: 'Avito'
 
-# Define your inputs here.
 inputs:
+  cloud_url:
+    description: 'Emcee.cloud URL (default "https://emcee.cloud")'
+    required: false
   emcee_token:
     description: 'Token for emcee.cloud API'
     required: true
-  app_path:
-    description: 'URL or PATH to App. Multiple values can be specified, separated by a comma.'
-    required: false
-    default: ''
-  tests_path:
-    description: 'URL or PATH to Tests. Multiple values can be specified, separated by a comma.'
-    required: false
-    default: ''
-  runner_path:
-    description: 'URL or PATH to Runner. Multiple values can be specified, separated by a comma.'
-    required: false
-    default: ''
-  test_plan_path:
-    description: 'URL or PATH to TestPlan file.'
-    required: false
-    default: ''
   platform:
     description: 'ios/android'
     required: true
-  device_os_version:
-    description: 'On which os version run tests'
-    required: true
+  config_path:
+    description: 'Path to emcee.cloud config file'
+    required: false
+  app_path:
+    description: 'App binary (Path/URL) which you want to test'
+    required: false
   envs:
-    description: 'Comma separated envs ex."ENV1=value1,ENV2=value2"'
+    description: 'Comma separated envs ex.ENV1=value1,ENV2=value2'
     required: false
-  wait_for_end:
-    description: 'Blocking your flow and waiting for the tests to complete'
+  device_os_version:
+    description: 'Device OS version (API level for Android). ex --os_version 34 --os_version iOS-17-0'
     required: false
-    default: 'true'
-  download_reports:
-    description: 'Comma separated list of reports to be downloaded upon completion. ex:"allure,junit" Works only with wait_for_end:true'
+  output_folder:
+    description: 'Output folder for test run results. Default: current folder'
     required: false
-    default: ''
+  reports:
+    description: 'Comma separated list of reports to be downloaded upon completion. ex:allure,junit'
+    required: false
+  runner:
+    description: '[iOS] Path/URL to your test runner. [Android. Optional] Class name of your test runner'
+    required: false
+  tests_app_path:
+    description: 'Binary (Path/URL) with tests'
+    required: false
+  wait_for_finish:
+    description: 'Waiting for the tests to complete. Default: true'
+    required: false
+
 
 # Define your outputs here.
 outputs:
-  run_id:
-    description: 'Emcee run id'
-  run_url:
-    description: 'Emcee run url'
   reports_path:
     description: 'Path to downloaded reports'
 
 runs:
-  using: node20
-  main: dist/index.js
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    EMCEE_CLOUD_URL : ${{ inputs.cloud_url }}
+    EMCEE_TOKEN : ${{ inputs.emcee_token }}
+    EMCEE_PLATFORM : ${{ inputs.platform }}
+    EMCEE_CONFIG_PATH : ${{ inputs.config_path }}
+    EMCEE_APP_PATH : ${{ inputs.app_path }}
+    EMCEE_ENVS : ${{ inputs.envs }}
+    EMCEE_DEVICE_OS_VERSION : ${{ inputs.device_os_version }}
+    EMCEE_OUTPUT_FOLDER : ${{ inputs.output_folder }}
+    EMCEE_REPORTS : ${{ inputs.reports }}
+    EMCEE_RUNNER : ${{ inputs.runner }}
+    EMCEE_TESTS_APP_PATH : ${{ inputs.tests_app_path }}
+    EMCEE_WAIT_FOR_FINISH : ${{ inputs.wait_for_finish }}
 
 branding:
   icon: 'activity'

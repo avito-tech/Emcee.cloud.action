@@ -4,17 +4,16 @@
 [![GitHub Super-Linter](https://github.com/JasperJhons/e-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![coverage](badges/coverage.svg)
 
-This action implements basic API calls for [emcee.cloud](https://emcee.cloud/).
+This action encapsulates [Command-Line interface for Emcee.cloud](https://github.com/avito-tech/Emcee.cloud-CLI)
 
-Full documentation available [here](https://emcee.cloud/docs/).
+The main features in a nutshell:
 
-With this action you can do the following:
+- Running iOS/Android native tests
+- Tracking test results during a run
+- Downloading results
+- Configuration via file and cli params
 
-- Upload your test artifacts to [emcee.cloud](https://emcee.cloud/) (*optional*).
-- Create new Test Run.
-- Wait until the end of Test Run (*optional*).
-- Download Test report artifacts on Test Run completion
-(*requires waiting until the end*).
+Full documentation available [here](https://docs.emcee.cloud/cloud/api/#command-line-interface).
 
 ## Inputs
 
@@ -34,59 +33,47 @@ With this action you can do the following:
 
 ### `platform`
 
-**Required** `iOS` or `Android`
+**Required** `ios` or `android`
 
-### `device_os_version`
+### `cloud_url`
 
-**Required** Device os version or Android API level.
+(*Optional*) Emcee.cloud URL (default "https://emcee.cloud")
+
+### `config_path`
+
+(*Optional*) Path to emcee.cloud config file
 
 ### `app_path`
 
-(*Optional*) URL or PATH to App under tests. Default: `empty`.
-
-You can specify several values separated by commas. (ex. `url1,path1,url2`).
-
-### `tests_path`
-
-(*Optional*) URL or PATH to binary with tests. Default: `empty`.
-
-You can specify several values separated by commas. (ex. `url1,path1,url2`)
-
-### `runner_path`
-
-(*Optional*) Default: `empty`.
-
-For `iOS`: URL or PATH to test runner binary.
-You can specify several values separated by commas. (ex. `url1,path1,url2`).
-
-For `Android`: Test Runner class (default)
-
-### `test_plan_path`
-
-(*Optional*)(*iOS only*) URL or PATH to test XCTestRun file. Default: `empty`.
+(*Optional*) App binary (Path/URL) which you want to test
 
 ### `envs`
 
-(*Optional*) Comma separated envs ex.`ENV1=value1,ENV2=value2`
+(*Optional*) Comma separated envs ex.ENV1=value1,ENV2=value2
 
-### `wait_for_end`
+### `device_os_version`
 
-(*Optional*) Blocking your flow and waiting for the tests to complete. Default: `true`
+(*Optional*) Device OS version (API level for Android). ex --os_version 34 --os_version iOS-17-0
 
-### `download_reports`
+### `output_folder`
 
-(*Optional*) Comma separated list of reports to be downloaded upon completion.
-ex:`allure,junit` Works only with `wait_for_end:true`
+(*Optional*) Output folder for test run results. Default: current folder
+
+### `reports`
+
+(*Optional*) Comma separated list of reports to be downloaded upon completion. ex:allure,junit
+
+### `runner`
+
+(*Optional*) '[iOS] Path/URL to your test runner. [Android. Optional] Class name of your test runner'
+
+### `tests_app_path`
+(*Optional*) Binary (Path/URL) with tests
+
+### `wait_for_finish`
+(*Optional*) 'Waiting for the tests to complete. Default: true'
 
 ## Outputs
-
-### `run_id`
-
-Test Run ID on [emcee.cloud](https://emcee.cloud/)
-
-### `run_url`
-
-Test Run URL on [emcee.cloud](https://emcee.cloud/)
 
 ### `reports_path`
 
@@ -95,12 +82,12 @@ The directory into which reports were saved
 ## Example usage
 
 ```yaml
-        uses: avito-tech/Emcee.cloud.action@v0.0.1b
+        uses: avito-tech/Emcee.cloud.action@v0.0.2
         with:
           emcee_token: ${{ secrets.EMCEE_TOKEN }}
-          app_path: http://emcee.cloud/api/v1/file/download/123#app-debug.apk
-          tests_path: ./556b821d-d1e4-4a0a-ba5b-3696862a9353#app-debug-androidTest.apk
+          app_path: https://emcee.cloud/api/v1/file/download/0786d961-93cb-4dc7-a9d5-443bd8922788#cloud_sample-debug.apk
+          tests_app_path: https://emcee.cloud/api/v1/file/download/944a149a-b197-45b6-9f08-bd60afcfa94e#cloud_sample-debug-androidTest.apk
           platform: android
           device_os_version: 27
-          download_reports: allure
+          reports: allure
 ```
