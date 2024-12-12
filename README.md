@@ -82,12 +82,12 @@ The directory into which reports were saved
 ## Example usage
 
 ```yaml
-        uses: avito-tech/Emcee.cloud.action@v0.0.2
+        uses: avito-tech/Emcee.cloud.action@v0.1.0
         with:
           emcee_token: ${{ secrets.EMCEE_TOKEN }}
           app_path: https://emcee.cloud/api/v1/file/download/0786d961-93cb-4dc7-a9d5-443bd8922788#cloud_sample-debug.apk
           tests_app_path: https://emcee.cloud/api/v1/file/download/944a149a-b197-45b6-9f08-bd60afcfa94e#cloud_sample-debug-androidTest.apk
           platform: android
-          device_os_version: 27
+          device_os_version: 31
           reports: allure
 ```
